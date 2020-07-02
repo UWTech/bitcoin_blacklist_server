@@ -1,2 +1,3 @@
-starlette
-uvicorn
+starlette # asynchronous API framework
+uvicorn # WSGI
+mock # testing tool
