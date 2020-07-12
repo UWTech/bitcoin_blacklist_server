@@ -45,7 +45,7 @@ async def post_request_blacklist(request: Request):
     # generate the record ID
     # add a record to the challenge table with a TTL of 24 hours keyed by the ID containing the
     # public key, and the nonce
-    # return a 201, along with the record_id and the nonce
+    # return a 201, along with the record_id (public key is record ID) and the nonce
     return JSONResponse('healthy', status_code=200)
 
 @app.route("/api/v1/confirm_blacklist", methods=["POST"])

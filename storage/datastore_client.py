@@ -7,6 +7,7 @@ import os
 import logging
 import global_variables
 
+
 class DatastoreClient:
 
     def __init__(self):
