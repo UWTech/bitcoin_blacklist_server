@@ -7,29 +7,47 @@ and permanent tables as appropriate
 '''
 
 import logging
+import global_variables
 import ecdsa
+from ecdsa import SigningKey, VerifyingKey, SECP256k1
+import uuid
+import hashlib
+
 from storage.datastore_client import DatastoreClient
 class BlacklistRequestHandler:
 
     def __init__(self):
         self.datastore_client = DatastoreClient()
 
-    def _write_to_intial_request_table(self):
+    def _write_to_intial_request_table(self, pub_key, record_id, unencrypted_nonce):
+        '''
+        writes the row to the initial request table
+        :param pub_key: the public key, that will serve as the primary key for the partition
+        :param record_id: the secondary unique identifier to differentiate discrete requests,
+        this prevents bad actors from overwriting records with the public key alone
+        :param unencrypted_nonce: the nonce generated for the challenge
+        :return: true if record is written successfully, false on bad input,
+        and the constant 'Conflict' if the record already exists
+        '''
         return True
 
     def _write_to_permanent_blacklist_table(self):
         return True
 
-    def _encrypt_nonce(self, pub_ecdsa, nonce):
+    def _encrypt_nonce(self, pub_key, nonce, key_type):
         '''
         method responsible for generating the encrypted nonce
-        :param pub_ecdsa: the public key used to encrypt the nonce
+        :param pub_key: the public key used to encrypt the nonce
         :param nonce: the nonce to be encrypted
-        :return:
+        :param key_type: the type of key being used for the encryption
+        :return: the nonce encrypted with the public key
         '''
-        # encrypt nonce using public key,
-        # return
-        return True
+        if key_type == global_variables.EDCSA_SECP256k1_TYPE:
+            # TODO:: encrypt
+            return True
+        else:
+            # not in supported key types
+            raise ValueError('invalid key type specified')
 
     def _decrypt_nonce(self, pub_edcsa, encrypted_nonce):
         '''
@@ -42,20 +60,55 @@ class BlacklistRequestHandler:
         # return
         return True
 
-    def generate_challenge(self, pub_ecdsa):
+    def generate_challenge(self, pub_key_string, key_type):
         '''
         method responsible for encrypting a nonce with
         the public key, and storing in the temporary table
-        :param pub_ecdsa:
-        :return: the nonce written to the table, and the record ID
+        :param pub_key_string: the string representation of the key
+        :param key_type: the key type as allowed in the global variables
+        :return: return value (true, false, conflict), the nonce that was written to the table encrypted with the public key,
+        and the record ID (record ID allows for differentiation of multiple attempts,
+        and prevents interference from bad actors)
         '''
         # check if key is already black listed
         # if so, return 409 conflict
         # if not generate nonce
         # encrypt the nonce with the public key
-        # write nonce to table, keyed by the public key
+        # write nonce to table, keyed by the public key, and ID
         # return the Nonce
-        return True
+
+        # generate the nonce, use UUID4 to minimize bad actors causing collisions
+        challenge_nonce = uuid.uuid4()
+        # convert the string to a key
+        pub_key = self._key_from_string(pub_key_string, key_type)
+        # encrypt the nonce
+        encrypted_nonce = self._encrypt_nonce(pub_key, challenge_nonce, key_type)
+        # generate record ID
+        record_id = uuid.uuid4()
+        # write record to nonce table
+        result = self._write_to_intial_request_table(pub_key, record_id, challenge_nonce)
+        return result, encrypted_nonce, record_id
+
+    def _key_from_string(self, key_string, key_type):
+        if key_type == global_variables.EDCSA_SECP256k1_TYPE:
+            ecdsa_key = SigningKey.from_string(key_string, curve=SECP256k1)
+            return ecdsa_key
+        else:
+            # not in supported key types
+            raise ValueError('invalid key type specified')
+
+    def _verify_key_validity(self, pub_key):
+        '''
+        confirms that the supplied key is valid
+        :param pub_key:
+        :return: true if the key is valid, false otherwise
+        '''
+        try:
+            pub_key = VerifyingKey.from_der()
+        except:
+            logging.exception('')
+            logging.error('key invalid')
+            return False
 
     def verify_challenge(self, pub_ecdsa, encrypted_nonce):
         '''
