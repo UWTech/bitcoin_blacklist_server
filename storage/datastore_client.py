@@ -12,7 +12,7 @@ class DatastoreClient:
 
     def __init__(self):
         self.username = os.environ.get(global_variables.DATASTORE_USERNAME_KEY)
-        self.username = os.environ.get(global_variables.DATASTORE_PASSWORD_KEY)
+        self.password = os.environ.get(global_variables.DATASTORE_PASSWORD_KEY)
         self.host = os.environ.get(global_variables.DATASTORE_HOST_KEY)
 
         try:

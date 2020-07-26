@@ -4,12 +4,16 @@ contains the top level RESTFul API definitions
 
 import logging
 import global_variables
+import ecies
 import uvicorn
+from blacklist.blacklist_request_handler import  BlacklistRequestHandler
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.applications import Starlette
+from json import JSONDecodeError
 
 app = Starlette()
+blacklist_handler = BlacklistRequestHandler()
 
 @app.route("/api/v1/health", methods=["GET"])
 async def health(request: Request):
@@ -29,7 +33,7 @@ async def post_request_blacklist(request: Request):
     Requires:
       public_key: the public key to be used in the series of requests
       key_type: one of the enumerated key types supported
-      (currently limited to ECDSA)
+      (currently limited to ECC SECP256k1)
     :param request:
     :return:
     on success 201 return code and
@@ -46,7 +50,28 @@ async def post_request_blacklist(request: Request):
     # add a record to the challenge table with a TTL of 24 hours keyed by the ID containing the
     # public key, and the nonce
     # return a 201, along with the record_id (public key is record ID) and the nonce
-    return JSONResponse('healthy', status_code=200)
+    key = ecies.utils.generate_eth_key()
+    priv_key = key.to_hex()
+    pub_key = key.public_key.to_hex()
+    try:
+        request_payload = await request.json()
+    except JSONDecodeError:
+        logging.exception('')
+        logging.error('failed to decode request')
+        return JSONResponse('bad JSON', status_code=400)
+
+    public_key = request_payload[global_variables.PUBLIC_KEY_LOOKUP_KEY]
+    key_type = request_payload[global_variables.KEY_TYPE_LOOKUP_KEY]
+
+    result, response = blacklist_handler.generate_challenge(public_key, key_type)
+    if result == global_variables.CONFLICT_STRING:
+        return JSONResponse(response, status_code=409)
+    if result == global_variables.BAD_INPUT:
+        return JSONResponse(response, status_code=400)
+    if result == global_variables.SERVER_ERROR:
+        return JSONResponse(response, status_code=500)
+    # else
+    return JSONResponse(response, status_code=201)
 
 @app.route("/api/v1/confirm_blacklist", methods=["POST"])
 async def post_confirm_blacklist(request: Request):
@@ -54,6 +79,8 @@ async def post_confirm_blacklist(request: Request):
     API for completing the challenge initially posed by the request blacklist API
     Requires:
         record_id: the id in the challenge table associated with the initial request
+        key_type: one of the enumerated key types supported
+        (currently limited to ECC SEP25k)
         encrypted_nonce: the nonce from the initial challenge, encrypted with the private
         key associated with the public key stored in the challenge table
     :param request:

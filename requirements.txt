@@ -1,4 +1,5 @@
 starlette # asynchronous API framework
 uvicorn # WSGI
 mock # testing tool
-ecdsa # for decrypting ECDSA keys and hashes
+ecdsa # for generating and verifying signaturesS
+eciespy # for asymetric cryptogrpahy and verification using public and private keys
