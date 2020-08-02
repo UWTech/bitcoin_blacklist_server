@@ -104,7 +104,8 @@ async def get_blacklist(request: Request):
     '''
     used by Bitcoin nodes to determine if the supplied
     scriptSig's public key is listed in the blacklist table
-    :param request:
+    :param request: the public key, keyed by the value public_keym
+    and the key type keyed by the
     :return:
     404 if the supplied public key is not present in the blacklist table
     200 if the key has been blacklisted
@@ -112,9 +113,31 @@ async def get_blacklist(request: Request):
     '''
     # attempt to lookup blacklist based on public key associated with scriptSig
     # if present, return 200
-    # if not found return 404
+    # if not found return 204
+    # bad input 400
     # other error return 5xx
-    return True
+
+    try:
+        # need to block and wait for asynchronous return
+        request_payload = await request.body()
+
+        request_params = request.query_params
+        public_key = request_params[global_variables.PUBLIC_KEY_LOOKUP_KEY]
+        key_type = request_params[global_variables.KEY_TYPE_LOOKUP_KEY]
+        response = 'fake TODO'
+        result = blacklist_handler.check_for_blacklist_entry(public_key, key_type)
+
+        if result is True:
+            return JSONResponse(response, status_code=200)
+        if result is False:
+            return JSONResponse(response, status_code=204)
+        if result == global_variables.SERVER_ERROR:
+            return JSONResponse(response, status_code=500)
+    except:
+        logging.exception('')
+        logging.error('Get Blacklisted key request failed')
+        # else
+        return JSONResponse('server error', status_code=500)
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=8080)

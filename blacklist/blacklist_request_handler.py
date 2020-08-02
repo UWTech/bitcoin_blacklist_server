@@ -41,12 +41,14 @@ class BlacklistRequestHandler:
         # return false
         return True
 
-    def _check_for_blacklist_entry(self, pub_key_string):
+    def check_for_blacklist_entry(self, pub_key_string, key_type):
         '''
         checks for the existence of the record in the blacklist table
         :param pub_key_string: the lookup key for the blacklist record
         :return: true if the record has already been blacklisted, false otherwise
         '''
+        # TODO:: verify key type is supported
+        res = self.datastore_client.get_record_from_blacklisted_table([pub_key_string])
         return False
 
     def _write_to_permanent_blacklist_table(self):

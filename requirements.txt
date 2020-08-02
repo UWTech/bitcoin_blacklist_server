@@ -3,3 +3,4 @@ uvicorn # WSGI
 mock # testing tool
 ecdsa # for generating and verifying signaturesS
 eciespy # for asymetric cryptogrpahy and verification using public and private keys
+cassandra-driver # for datastore interactions
