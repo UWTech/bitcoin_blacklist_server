@@ -63,7 +63,7 @@ async def post_request_blacklist(request: Request):
     public_key = request_payload[global_variables.PUBLIC_KEY_LOOKUP_KEY]
     key_type = request_payload[global_variables.KEY_TYPE_LOOKUP_KEY]
 
-    result, response = blacklist_handler.generate_challenge(public_key, key_type)
+    result, response = blacklist_handler.generate_challenge(public_key)
     if result == global_variables.CONFLICT_STRING:
         return JSONResponse(response, status_code=409)
     if result == global_variables.BAD_INPUT:

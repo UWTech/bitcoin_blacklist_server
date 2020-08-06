@@ -33,15 +33,24 @@ class BlacklistRequestHandler:
         and the constant 'Conflict' if the record already exists
         '''
         # check if the record already exists in permanent blacklist table
+        if self.check_for_blacklist_entry(pub_key_string):
+            return global_variables.CONFLICT_STRING
         # if so, return conflict
         # else
-        # insert
-        # if successful, return true
-        # else
-        # return false
-        return True
+        try:
+            # insert
+            res = self._write_to_intial_request_table(pub_key_string, record_id, unencrypted_nonce)
+            if res: # TODO:: check logic
+                return True
+            else:
+                logging.error('failed to write temp record')
+                return False
+        except:
+            logging.exception('')
+            logging.error('failed to write temp record')
+            return False
 
-    def check_for_blacklist_entry(self, pub_key_string, key_type):
+    def check_for_blacklist_entry(self, pub_key_string):
         '''
         checks for the existence of the record in the blacklist table
         :param pub_key_string: the lookup key for the blacklist record
