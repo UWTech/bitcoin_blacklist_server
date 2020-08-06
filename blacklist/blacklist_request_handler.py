@@ -47,9 +47,8 @@ class BlacklistRequestHandler:
         :param pub_key_string: the lookup key for the blacklist record
         :return: true if the record has already been blacklisted, false otherwise
         '''
-        # TODO:: verify key type is supported
         res = self.datastore_client.get_record_from_blacklisted_table([pub_key_string])
-        return False
+        return res
 
     def _write_to_permanent_blacklist_table(self):
         return True

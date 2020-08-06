@@ -65,7 +65,8 @@ class DatastoreClient:
         :return:
         '''
         res = self._execute_query(global_variables.DATASTORE_GET_BLACKLISTED_QUERY, pubkey)
-        if res:
+        # check for a non-zero number of records for the key
+        if len(res.current_rows) > 0:
             return True
         else:
             return False
