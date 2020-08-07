@@ -32,15 +32,11 @@ class BlacklistRequestHandler:
         :return: true if record is written successfully, false on bad input,
         and the constant 'Conflict' if the record already exists
         '''
-        # check if the record already exists in permanent blacklist table
-        if self.check_for_blacklist_entry(pub_key_string):
-            return global_variables.CONFLICT_STRING
-        # if so, return conflict
-        # else
         try:
             # insert
-            res = self._write_to_intial_request_table(pub_key_string, record_id, unencrypted_nonce)
-            if res: # TODO:: check logic
+            res = self.datastore_client.write_initial_blacklist_request(str(pub_key_string), str(record_id),
+                                                                        str(unencrypted_nonce))
+            if res:
                 return True
             else:
                 logging.error('failed to write temp record')
@@ -70,7 +66,7 @@ class BlacklistRequestHandler:
         :param key_type: the type of key being used for the encryption
         :return: the nonce encrypted with the public key
         '''
-        if key_type == global_variables.SECP256k1_TYPE:
+        if key_type.upper() == global_variables.SECP256k1_TYPE:
             #key = ecies.utils.generate_eth_key()
             #priv_key = key.to_hex()
             #pub_key = key.public_key.to_hex()
@@ -102,7 +98,7 @@ class BlacklistRequestHandler:
         and prevents interference from bad actors)
         '''
         # avoid costly encryption if the record already exists, and return 'conflict'
-        exists = self._check_for_blacklist_entry(pub_key_string)
+        exists = self.check_for_blacklist_entry(pub_key_string)
         if exists:
             return global_variables.CONFLICT_STRING, 'Record exists for public key'
 
@@ -126,10 +122,11 @@ class BlacklistRequestHandler:
         record_id = uuid.uuid4()
         # write record to nonce table
         result = self._write_to_intial_request_table(pub_key_string, record_id, challenge_nonce)
-        return result, encrypted_nonce, record_id
+        # convert the nonce and record ID to a JSON friendly format for the response
+        return result, str(encrypted_nonce), str(record_id)
 
     def _key_from_string(self, key_string, key_type):
-        if key_type == global_variables.SECP256k1_TYPE:
+        if key_type.upper() == global_variables.SECP256k1_TYPE:
             ecc_key = key_string
             return ecc_key
         else:

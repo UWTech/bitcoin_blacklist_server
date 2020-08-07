@@ -71,5 +71,24 @@ class DatastoreClient:
         else:
             return False
 
+    def write_initial_blacklist_request(self, public_key_hex, record_id, nonce):
+        '''
+        writes the initial unconfirmed blacklist request to the temporary table with
+        the TTL specified in the global variables file
+        :param public_key_hex: the hex associated with the public key
+        :param record_id: the record ID to be used as the partition key
+        :param nonce: the unencrypted nonce to be matched
+        :return: true if successful in writing, false or exception otherwise
+        '''
+        # convert params to list as required by datastore driver
+        query_params = (public_key_hex, record_id, nonce)
+        try:
+            res = self._execute_query(global_variables.DATASTORE_WRITE_TEMP_BLACKLIST_QUERY, query_params)
+            return True
+        except:
+            logging.exception('')
+            logging.error('failed to write to table')
+            return False
+
     def close_session(self):
         return True

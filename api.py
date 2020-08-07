@@ -63,14 +63,18 @@ async def post_request_blacklist(request: Request):
     public_key = request_payload[global_variables.PUBLIC_KEY_LOOKUP_KEY]
     key_type = request_payload[global_variables.KEY_TYPE_LOOKUP_KEY]
 
-    result, response = blacklist_handler.generate_challenge(public_key)
+    result, encrypted_nonce, record_id = blacklist_handler.generate_challenge(public_key, key_type)
+
     if result == global_variables.CONFLICT_STRING:
-        return JSONResponse(response, status_code=409)
+        return JSONResponse('Conflict', status_code=409)
     if result == global_variables.BAD_INPUT:
-        return JSONResponse(response, status_code=400)
+        return JSONResponse('Bad Input', status_code=400)
     if result == global_variables.SERVER_ERROR:
-        return JSONResponse(response, status_code=500)
+        return JSONResponse('Internal Server Error', status_code=500)
     # else
+    response = {}
+    response[global_variables.ENCRYPTED_NONCE] = encrypted_nonce
+    response[global_variables.RECORD_ID] = record_id
     return JSONResponse(response, status_code=201)
 
 @app.route("/api/v1/confirm_blacklist", methods=["POST"])
