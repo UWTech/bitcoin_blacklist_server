@@ -146,7 +146,7 @@ class BlacklistRequestHandler:
             logging.error('key invalid')
             return False
 
-    def verify_challenge(self, pub_ecdsa, encrypted_nonce):
+    def verify_challenge(self, pub_key, record_id, encrypted_nonce):
         '''
         method responsible for putting a record permanently in the black list table
         Checks the validity of the encrypted nonce against the record for the
@@ -159,11 +159,38 @@ class BlacklistRequestHandler:
         # to request blacklist
         # check for existence of record keyed by this public key
         # if not present return 404
+        result = self.datastore_client.get_record_from_blacklist_request_table(pub_key, record_id)
+        if result is False:
+            logging.info('failed to find record')
+            return False
         # if present
         # decrypt the supplied nonce using the supplied public key
+        stored_decrypted_nonce = result.current_rows[0].nonce
         # compare with the store decrypted nonce
-        # if they do not match, return a 400
-        # if they do match, write a permanent blacklist request to the blacklist table
-        # return a 201
-        return True
+        match = self._compare_nonce(pub_key, encrypted_nonce, stored_decrypted_nonce)
+        # if they do not match, return a False
+        if match is False:
+            logging.info('nonce values did not match')
+            return False
+        else:
+            # if they do match, write a permanent blacklist request to the blacklist table
+            try:
+                result = self.datastore_client.write_permanent_blacklist_record([pub_key])
+                return result
+            except:
+                logging.exception('')
+                logging.error('failed to write record to permanent table')
+                return False
 
+    def _compare_nonce(self, pub_key, encrypted_nonce, stored_decrypted_nonce):
+        '''
+        decrypts the nonce with the supplied public key, and compares
+        with the supplied decrypted nonce.
+        :param pub_key: key to use for decrypting the nonce
+        :param encrypted_nonce: the nonce suppliedby the user
+        :param stored_decrypted_nonce: the value expected
+        :return: true if the nonces match, false or exception otherwise
+        '''
+        # decrypt nonce using the public key
+        # compare
+        return True

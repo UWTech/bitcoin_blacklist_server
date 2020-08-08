@@ -8,6 +8,7 @@ import logging
 import global_variables
 from ssl import PROTOCOL_TLSv1, CERT_REQUIRED, CERT_OPTIONAL
 from cassandra.cluster import Cluster
+from datetime import datetime
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.policies import RoundRobinPolicy
 
@@ -23,6 +24,7 @@ class DatastoreClient:
         try:
             self.datastore_session = self._generate_datastore_session(self.username, self.password, self.host,\
                                                                       self.port, self.keyspace_name)
+            # logging.getLogger('cassandra').setLevel(logging.DEBUG)
         except:
             logging.exception('')
             logging.error('failed to establish datastore session')
@@ -71,6 +73,22 @@ class DatastoreClient:
         else:
             return False
 
+    def get_record_from_blacklist_request_table(self, pubkey, record_id):
+        '''
+        retrieves the nonce from the table
+        :param pubkey: the public key that acts as the partition key
+        :param record_id: the clustering column value for looking up a specific challenge nonce
+        :return: the rows associated with the record if the exist
+        '''
+        query_params = (pubkey, record_id)
+        try:
+            res = self._execute_query(global_variables.DATASTORE_GET_TEMP_BLACKLISTED_QUERY, params_list=query_params)
+            return res
+        except:
+            logging.exception('')
+            logging.error('failed to retrieve record')
+            return False
+
     def write_initial_blacklist_request(self, public_key_hex, record_id, nonce):
         '''
         writes the initial unconfirmed blacklist request to the temporary table with
@@ -84,6 +102,23 @@ class DatastoreClient:
         query_params = (public_key_hex, record_id, nonce)
         try:
             res = self._execute_query(global_variables.DATASTORE_WRITE_TEMP_BLACKLIST_QUERY, query_params)
+            return True
+        except:
+            logging.exception('')
+            logging.error('failed to write to table')
+            return False
+
+    def write_permanent_blacklist_record(self, public_key_hex):
+        '''
+        writes the specified record to the permanent table
+        :param public_key_hex:
+        :return:
+        '''
+        # convert params to list as required by datastore driver
+        try:
+            row_timestamp = int(float(datetime.now().strftime("%s.%f"))) * 1000
+            res = self._execute_query(global_variables.DATASTORE_WRITE_BLACKLISTED_QUERY, public_key_hex)
+                                      #(public_key_hex, str(row_timestamp)))
             return True
         except:
             logging.exception('')

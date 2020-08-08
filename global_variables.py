@@ -8,8 +8,8 @@ SECP256k1_TYPE = 'SECP256K1'
 CONFLICT_STRING = 'conflict'
 BAD_INPUT = 'bad_input'
 SERVER_ERROR = 'server_error'
-PUBLIC_KEY_LOOKUP_KEY = 'public_key'
-KEY_TYPE_LOOKUP_KEY = 'key_type'
+PUBLIC_KEY = 'public_key'
+KEY_TYPE = 'key_type'
 # environment variables for data store
 DATASTORE_USERNAME_KEY = 'DATASTORE_USERNAME'
 DATASTORE_PASSWORD_KEY = 'DATASTORE_PASSWORD'
@@ -28,5 +28,5 @@ DATASTORE_GET_TEMP_BLACKLISTED_QUERY = 'select * from blacklist_request where pu
 # for retrieving a record from the permanent blacklisted table
 DATASTORE_GET_BLACKLISTED_QUERY = 'select * from blacklisted_keys where public_key_hex=%s'
 # for writing a record to the permanent table
-DATASTORE_WRITE_BLACKLISTED_QUERY = 'insert into blacklisted_keys (public_key_hex, datetime) values (\'%s\', toTimestamp(now()))'
+DATASTORE_WRITE_BLACKLISTED_QUERY = 'insert into blacklisted_keys (public_key_hex, datetime) values (%s, toTimestamp(now()))'
 

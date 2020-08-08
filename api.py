@@ -60,8 +60,8 @@ async def post_request_blacklist(request: Request):
         logging.error('failed to decode request')
         return JSONResponse('bad JSON', status_code=400)
 
-    public_key = request_payload[global_variables.PUBLIC_KEY_LOOKUP_KEY]
-    key_type = request_payload[global_variables.KEY_TYPE_LOOKUP_KEY]
+    public_key = request_payload[global_variables.PUBLIC_KEY]
+    key_type = request_payload[global_variables.KEY_TYPE]
 
     result, encrypted_nonce, record_id = blacklist_handler.generate_challenge(public_key, key_type)
 
@@ -101,6 +101,34 @@ async def post_confirm_blacklist(request: Request):
     # else
     # return 400
     # Note:: assumes we're taking advantage of Bitcoin DDOS properties
+    try:
+        try:
+            request_payload = await request.json()
+        except JSONDecodeError:
+            logging.exception('')
+            logging.error('failed to decode request')
+            return JSONResponse('bad JSON', status_code=400)
+
+        public_key = request_payload[global_variables.PUBLIC_KEY]
+        record_id = request_payload[global_variables.RECORD_ID]
+        encrypted_nonce = request_payload[global_variables.ENCRYPTED_NONCE]
+        result = blacklist_handler.check_for_blacklist_entry(public_key)
+
+        if result is True:
+            # don't do expensive decryption if the key pair is
+            # already blacklisted
+            return JSONResponse('key is blacklisted', status_code=409)
+
+        # attempt to verify the challenge
+        result = blacklist_handler.verify_challenge(public_key, record_id, encrypted_nonce)
+
+        if result is False:
+            return JSONResponse('invalid input', status_code=400)
+        else:
+            return JSONResponse('server error', status_code=201)
+    except:
+        logging.exception('')
+        return JSONResponse('server error', status_code=500)
     return True
 
 @app.route("/api/v1/blacklist", methods=["GET"])
@@ -115,18 +143,12 @@ async def get_blacklist(request: Request):
     200 if the key has been blacklisted
     500 in the event of other error
     '''
-    # attempt to lookup blacklist based on public key associated with scriptSig
-    # if present, return 200
-    # if not found return 204
-    # bad input 400
-    # other error return 5xx
-
     try:
         # need to block and wait for asynchronous return
         request_payload = await request.body()
         request_params = request.query_params
-        public_key = request_params[global_variables.PUBLIC_KEY_LOOKUP_KEY]
-        key_type = request_params[global_variables.KEY_TYPE_LOOKUP_KEY]
+        public_key = request_params[global_variables.PUBLIC_KEY]
+        key_type = request_params[global_variables.KEY_TYPE]
         result = blacklist_handler.check_for_blacklist_entry(public_key, key_type)
 
         if result is True:
