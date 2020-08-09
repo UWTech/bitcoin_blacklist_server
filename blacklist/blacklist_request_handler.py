@@ -146,7 +146,7 @@ class BlacklistRequestHandler:
             logging.error('key invalid')
             return False
 
-    def verify_challenge(self, pub_key, record_id, encrypted_nonce):
+    def verify_challenge(self, pub_key, record_id, signed_nonce):
         '''
         method responsible for putting a record permanently in the black list table
         Checks the validity of the encrypted nonce against the record for the
@@ -166,8 +166,8 @@ class BlacklistRequestHandler:
         # if present
         # decrypt the supplied nonce using the supplied public key
         stored_decrypted_nonce = result.current_rows[0].nonce
-        # compare with the store decrypted nonce
-        match = self._compare_nonce(pub_key, encrypted_nonce, stored_decrypted_nonce)
+        # verify the signature
+        match = self._compare_nonce(pub_key, signed_nonce, stored_decrypted_nonce)
         # if they do not match, return a False
         if match is False:
             logging.info('nonce values did not match')
@@ -182,15 +182,21 @@ class BlacklistRequestHandler:
                 logging.error('failed to write record to permanent table')
                 return False
 
-    def _compare_nonce(self, pub_key, encrypted_nonce, stored_decrypted_nonce):
+    def _compare_nonce(self, pub_key, signed_nonce, stored_decrypted_nonce):
         '''
-        decrypts the nonce with the supplied public key, and compares
-        with the supplied decrypted nonce.
+        compares the signed nonce with the supplied public key, and verifies
+        the value is the same as that stored in the datastore
         :param pub_key: key to use for decrypting the nonce
-        :param encrypted_nonce: the nonce suppliedby the user
+        :param signed_nonce: the nonce supplied by the user
         :param stored_decrypted_nonce: the value expected
         :return: true if the nonces match, false or exception otherwise
         '''
-        # decrypt nonce using the public key
-        # compare
-        return True
+        # compare and verify signature
+        try:
+            pub_key = ecies.hex2pub(pub_key)
+            result = pub_key.verify(signed_nonce, bytes(stored_decrypted_nonce))
+            return result
+        except:
+            logging.exception('')
+            logging.error('failed to verify signature')
+            return False

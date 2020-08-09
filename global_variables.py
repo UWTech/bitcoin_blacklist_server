@@ -18,7 +18,8 @@ DATASTORE_PORT_KEY = 'DATASTORE_PORT'
 DATASTORE_KEYSPACE_NAME_KEY = 'DATASTORE_KEYSPACE_NAME'
 DATASTORE_CERT_PATH_KEY = 'DATASTORE_CERT_PATH'
 # response params
-ENCRYPTED_NONCE = 'encrypted_nonce'
+SIGNED_NONCE = 'signed_nonce'
+ENCRYPTED_NONCE = 'encrytped_nonce'
 RECORD_ID = 'record_id'
 # queries for datastore
 # for adding a record that is being considered for inclusion in the permanent table. TTL of 1200 seconds leaves 20 minutes for the requestor to confirm
