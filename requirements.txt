@@ -1,0 +1,7 @@
+starlette # asynchronous API framework
+uvicorn # WSGI
+mock # testing tool
+ecdsa # for generating and verifying signaturesS
+eciespy # for asymetric cryptogrpahy and verification using public and private keys
+pycoin # for signature verification
+cassandra-driver # for datastore interactions
