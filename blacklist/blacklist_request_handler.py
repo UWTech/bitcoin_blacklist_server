@@ -8,14 +8,10 @@ and permanent tables as appropriate
 
 import logging
 import global_variables
-import ecdsa
 import ecies
 import base64
-from ecies.utils import generate_key
-from ecies import encrypt, decrypt
-from ecdsa import SigningKey, VerifyingKey, SECP256k1
+from ecdsa import VerifyingKey
 import uuid
-import hashlib
 
 from storage.datastore_client import DatastoreClient
 class BlacklistRequestHandler:
@@ -103,10 +99,6 @@ class BlacklistRequestHandler:
         if exists:
             return global_variables.CONFLICT_STRING, 'Record exists for public key'
 
-        # if not generate nonce
-        # encrypt the nonce with the public key
-        # write nonce to table, keyed by the public key, and ID
-        # return the encrypted Nonce
         # generate the nonce, use UUID4 to minimize bad actors causing collisions
         challenge_nonce = str(uuid.uuid4())
         # convert the string to a key
@@ -155,9 +147,6 @@ class BlacklistRequestHandler:
         :return: status code associated with interaction
         '''
         # note DDos protection is to be taken care of by existing Bitcoin
-        # DDOS protections. Exponential backoff has based off number of requests for a public key
-        # has the potential to allow attacker to make it impossible for legitimate owner to
-        # to request blacklist
         # check for existence of record keyed by this public key
         # if not present return 404
         result = self.datastore_client.get_record_from_blacklist_request_table(pub_key, record_id)
