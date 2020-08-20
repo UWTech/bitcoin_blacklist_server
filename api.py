@@ -1,26 +1,15 @@
 '''
 contains the top level RESTFul API definitions
 '''
-import binascii
 import logging
-import ecdsa
-
-from ecdsa.ecdsa import generator_secp256k1
-from ecdsa import VerifyingKey
 
 import global_variables
-import ecies
 import uvicorn
 from blacklist.blacklist_request_handler import  BlacklistRequestHandler
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.applications import Starlette
 from json import JSONDecodeError
-# for signature
-import hashlib, secrets
-
-
-
 app = Starlette()
 blacklist_handler = BlacklistRequestHandler()
 
@@ -52,14 +41,6 @@ async def post_request_blacklist(request: Request):
     400 on malformed request
     5xx on other unspecified error
     '''
-    # check if record is already listed for this public key
-    # if so, return 409 noting the record already exists in the table of blacklisted public keys
-    # generate the nonce
-    # generate the record ID
-    # add a record to the challenge table with a TTL of 24 hours keyed by the ID containing the
-    # public key, and the nonce
-    # return a 201, along with the record_id (public key is record ID) and the nonce
-
     try:
         request_payload = await request.json()
     except JSONDecodeError:
@@ -97,18 +78,6 @@ async def post_confirm_blacklist(request: Request):
     :param request:
     :return:
     '''
-    # attempt to lookup record
-    # if not found, return 404
-    # found
-    # sha3_256 hash the nonce, verify the signature with the public key stored
-    # https://wizardforcel.gitbooks.io/practical-cryptography-for-developers-book/content/digital-signatures/ecdsa-sign-verify-examples.html
-    # challenge table
-    # if the nonce signature matches the record stored in the challenge table
-    # write record in the blacklist table
-    # return 201
-    # else
-    # return 400
-    # Note:: assumes we're taking advantage of Bitcoin DDOS properties
     try:
         try:
             request_payload = await request.json()

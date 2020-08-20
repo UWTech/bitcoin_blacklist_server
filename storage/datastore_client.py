@@ -6,11 +6,9 @@ given credentials and location information injected into environment
 import os
 import logging
 import global_variables
-from ssl import PROTOCOL_TLSv1, CERT_REQUIRED, CERT_OPTIONAL
 from cassandra.cluster import Cluster
 from datetime import datetime
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.policies import RoundRobinPolicy
 
 
 class DatastoreClient:
