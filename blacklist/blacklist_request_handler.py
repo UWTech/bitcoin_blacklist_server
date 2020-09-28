@@ -175,6 +175,7 @@ class BlacklistRequestHandler:
         else:
             # if they do match, write a permanent blacklist request to the blacklist table
             try:
+                # TODO:: hash entry before writing: https://learnmeabitcoin.com/technical/public-key-hash
                 result = self.datastore_client.write_permanent_blacklist_record([pub_key])
                 return result
             except:
