@@ -13,6 +13,55 @@ from json import JSONDecodeError
 app = Starlette()
 blacklist_handler = BlacklistRequestHandler()
 
+@app.route("/api/v1/transaction", methods=["POST"])
+async def transaction(request: Request):
+    '''
+    method that takes in the Bitcoin transaction,
+    and checks the script_pub_key parameter against the
+    blacklist service to determine if the transaction
+    should be allowed on the basis of the state of the
+    bitcoin key
+    :param request: the body containing the Bitcoin transaction JSON
+    :return: 201 in event transaction is allowed 400 otherwise
+    '''
+    # extract any script pub keys (script_pub_key) from any of the request info
+    # note that this can entail multiple keys in teh event on a complex
+    # transaction
+    # if the script_pub_key is listed as black listed,
+    # return 4xx return code, and do not pass on the request to the Bitcion node
+    # if the key is not blacklisted,
+    # pass to Bitcoin CLI via shell communication,
+    # and pass response
+    try:
+        request_payload = await request.json()
+    except JSONDecodeError:
+        logging.exception('')
+        logging.error('failed to decode request')
+        return JSONResponse('bad JSON', status_code=400)
+
+    is_blacklisted = False
+    invalid_key = None
+    # check each JSON record in the request, as in the event of complex
+    # transaction, could multiple script_pub_key involved
+    for json_record in request_payload:
+        # extract the public key associated with this JSON element involved in transaction
+        request_params = request.query_params
+        script_pub_key = json_record[global_variables.SCRIPT_PUB_KEY]
+
+        is_blacklisted = blacklist_handler.check_for_blacklist_entry(script_pub_key)
+        # no need to continue, at least one of the parties involved in the transaction
+        # is blacklisted
+        if is_blacklisted:
+            invalid_key = script_pub_key
+            break
+    if is_blacklisted is False:
+        # pass transaction to CLI
+        response = 'success'
+        return JSONResponse(response, status_code=201)
+    else:
+        # key has been blacklisted
+        return JSONResponse('Key invalid. Listed as blacklisted: {}'.format(invalid_key), 400)
+
 @app.route("/api/v1/health", methods=["GET"])
 async def health(request: Request):
     '''
