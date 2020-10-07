@@ -25,7 +25,7 @@ SCRIPT_PUB_KEY = "scriptPubKey"
 # queries for datastore
 # for adding a record that is being considered for inclusion in the permanent table. TTL of 1200 seconds leaves 20 minutes for the requestor to confirm
 # TODO remove extra 0 used during testing to extend testing window
-DATASTORE_WRITE_TEMP_BLACKLIST_QUERY = 'insert into blacklist_request (public_key_hex, record_id, nonce) values (%s,%s,%s) using ttl 12000'
+DATASTORE_WRITE_TEMP_BLACKLIST_QUERY = 'insert into blacklist_request (public_key_hex, record_id, nonce) values (%s,%s,%s)' # using ttl 12000'
 # for retrieving the temporary record to confirm nonce values
 DATASTORE_GET_TEMP_BLACKLISTED_QUERY = 'select * from blacklist_request where public_key_hex=%s and record_id=%s'
 # for retrieving a record from the permanent blacklisted table
