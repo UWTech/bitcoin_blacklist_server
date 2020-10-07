@@ -7,6 +7,7 @@ and permanent tables as appropriate
 '''
 
 import logging
+import subprocess
 import global_variables
 import ecies
 import base64

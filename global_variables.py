@@ -21,6 +21,7 @@ DATASTORE_CERT_PATH_KEY = 'DATASTORE_CERT_PATH'
 SIGNED_NONCE = 'signed_nonce'
 ENCRYPTED_NONCE = 'encrytped_nonce'
 RECORD_ID = 'record_id'
+SCRIPT_PUB_KEY = "scriptPubKey"
 # queries for datastore
 # for adding a record that is being considered for inclusion in the permanent table. TTL of 1200 seconds leaves 20 minutes for the requestor to confirm
 # TODO remove extra 0 used during testing to extend testing window

@@ -5,6 +5,7 @@ import logging
 
 import global_variables
 import uvicorn
+import subprocess
 from blacklist.blacklist_request_handler import  BlacklistRequestHandler
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
@@ -57,6 +58,9 @@ async def transaction(request: Request):
     if is_blacklisted is False:
         # pass transaction to CLI
         response = 'success'
+        # TODO:: insert CLI command passing along transaction from request
+        # execute CLI command request against Bitcoin server as requested
+        resp = subprocess.call('echo $(pwd)')
         return JSONResponse(response, status_code=201)
     else:
         # key has been blacklisted
