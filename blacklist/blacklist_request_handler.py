@@ -7,6 +7,7 @@ and permanent tables as appropriate
 '''
 
 import logging
+import subprocess
 import global_variables
 import ecdsa
 import ecies
@@ -100,7 +101,7 @@ class BlacklistRequestHandler:
         # avoid costly encryption if the record already exists, and return 'conflict'
         exists = self.check_for_blacklist_entry(pub_key_string)
         if exists:
-            return global_variables.CONFLICT_STRING, 'Record exists for public key'
+            return global_variables.CONFLICT_STRING, 'Record exists for public key', None
 
         # if not generate nonce
         # encrypt the nonce with the public key
@@ -175,7 +176,11 @@ class BlacklistRequestHandler:
         else:
             # if they do match, write a permanent blacklist request to the blacklist table
             try:
-                result = self.datastore_client.write_permanent_blacklist_record([pub_key])
+                # TODO:: hash entry before writing: https://learnmeabitcoin.com/technical/public-key-hash
+                # calculate the OP_HASH160 of the address, as this will be the scriptPubKey
+                # echo -n $PUB_KEY | xxd -r -p | openssl dgst -sha256 -binary | openssl dgst -rmd160
+                OP_HASH160 = subprocess.call('echo -n {} | xxd -r -p | openssl dgst -sha256 -binary | openssl dgst -rmd160'.format(pub_key))
+                result = self.datastore_client.write_permanent_blacklist_record(OP_HASH160)
                 return result
             except:
                 logging.exception('')

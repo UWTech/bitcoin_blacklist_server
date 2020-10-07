@@ -10,6 +10,7 @@ BAD_INPUT = 'bad_input'
 SERVER_ERROR = 'server_error'
 PUBLIC_KEY = 'public_key'
 KEY_TYPE = 'key_type'
+SCRIPT_PUB_KEY = "scriptPubKey"
 # environment variables for data store
 DATASTORE_USERNAME_KEY = 'DATASTORE_USERNAME'
 DATASTORE_PASSWORD_KEY = 'DATASTORE_PASSWORD'
