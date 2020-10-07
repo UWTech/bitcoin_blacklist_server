@@ -1,5 +1,4 @@
 # simple script used to generate signatures and keys
-import re
 import ecies
 import subprocess
 import base64
