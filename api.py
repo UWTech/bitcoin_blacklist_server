@@ -3,6 +3,7 @@ contains the top level RESTFul API definitions
 '''
 import logging
 
+import json
 import global_variables
 import uvicorn
 import subprocess
@@ -60,8 +61,9 @@ async def transaction(request: Request):
         response = 'success'
         # TODO:: insert CLI command passing along transaction from request
         # execute CLI command request against Bitcoin server as requested
-        resp = subprocess.call('echo $(pwd)')
-        return JSONResponse(response, status_code=201)
+        resp = subprocess.check_output('cd /home/eamon/Repositories/bitcoin/src/ && ./bitcoin-cli -testnet getwalletinfo', shell=True)
+        resp = json.loads(resp.decode('utf-8'))
+        return JSONResponse(resp, status_code=201)
     else:
         # key has been blacklisted
         return JSONResponse('Key invalid. Listed as blacklisted: {}'.format(invalid_key), 400)
